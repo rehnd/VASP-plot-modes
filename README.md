@@ -1,12 +1,12 @@
 # Generate VESTA mode files from VASP OUTCAR files
 
 ### What this code does:
-Automatic generates visualizations of vibrational modes
+Automatically generates visualizations of vibrational modes
 computed from the density functional theory (DFT) code
-[VASP](https://www.vasp.at/), like this acoustic mode of
-Y<sub>2</sub>CBr<sub>2</sub>:
+[VASP](https://www.vasp.at/), like this acoustic mode of ZrIN:
 
-<img src="pics/Y2CBr2.png" width=400 align="middle">
+
+<img src="pics/ZrIN.png" width=400 align="middle">
 
 
 ### Details:
@@ -16,11 +16,11 @@ the Visualization for Electronic and STructural Analysis [VESTA](http://jp-miner
 
 ### Usage:
 
-In a single folder, you need the following 4 files:
+In a single folder, include the following 4 files:
 
-1. `POSCAR` file, which is the POSCAR used as input to the DFPT calculation
-2. `OUTCAR` file, which holds the results of an IBRION=7 or 8 calculation
-3. `poscar.vesta` file.  This file is the direct result of opening the `POSCAR` file directly in vesta and saving the file with the filename `poscar` and extension `.vesta` (note that poscar is lower-case). No modes/displacement vectors should be visible in VESTA prior to saving.
+1. `POSCAR`, which gives the atomic positions and unit cell used as input to the DFPT calculation
+2. `OUTCAR`, which should hold the results of an IBRION=7 or 8 calculation
+3. `poscar.vesta`.  This file is the direct result of opening the `POSCAR` file directly in VESTA and saving the file with the filename `poscar` and extension `.vesta` (note that poscar is lower-case). No modes/displacement vectors should be visible in VESTA prior to saving.
 4. `modes_to_vesta.py`, which comes from this repo.
 
 To run, do the following:
@@ -31,3 +31,6 @@ To run, do the following:
 Only the first two arguments are needed; the third argument is optional and can be used to specify an alternative VESTA filename (i.e., a name different from `poscar.vesta`)
 
 The result is a set of 3N files where N is the number of atoms in the unit cell. Each file has the format `mode_<freq>.vesta`, where <freq> is the mode frequency in cm<sup>-1</sup>. 
+
+
+*Some parts of `modes_to_vesta.py` have been adapted from [vasp_raman.py](https://github.com/raman-sc/VASP) and [Phonopy](https://atztogo.github.io/phonopy/)*
