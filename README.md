@@ -6,7 +6,8 @@ computed from the density functional theory (DFT) code
 [VASP](https://www.vasp.at/), like this acoustic mode of
 Y<sub>2</sub>CBr<sub>2</sub>:
 
-<img src="pics/Y2CBr2.png" width=400 >
+<img src="pics/Y2CBr2.png" width=400 align="middle">
+
 
 ### Details:
 The file `modes_to_vesta.py` quickly converts the modes calculated in
