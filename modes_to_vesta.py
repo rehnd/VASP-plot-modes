@@ -74,12 +74,11 @@ def parseModes(outcar, nat, vesta_front, vesta_end, scaling_factor):
         line = outcar.readline()
         if not line:
             break
-        if "Eigenvectors and eigenvalues of the dynamical matrix" in line:
-
+        if "Eigenvectors after division by SQRT(mass)" in line:
             outcar.readline() # empty line
             outcar.readline() # Eigenvectors and eigenvalues of the dynamical matrix
-            #outcar.readline() # ----------------------------------------------------
-            #outcar.readline() # empty line
+            outcar.readline() # ----------------------------------------------------
+            outcar.readline() # empty line
             print("Mode    Freq (cm-1)")
             for i in range(nat*3):
                 outcar.readline() # empty line
@@ -171,7 +170,7 @@ def getVestaFrontEnd(vesta):
 
 if __name__ == '__main__':
 
-    scaling_factor = 6  # 6 is roughly correct
+    scaling_factor = 40
     
     vesta, outcar, poscar = openVestaOutcarPoscar()
     vesta_front, vesta_end = getVestaFrontEnd(vesta)
