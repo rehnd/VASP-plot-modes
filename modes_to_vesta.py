@@ -1,7 +1,7 @@
 from pylab import *
 import sys
 import re
-
+from os import mkdir
 
 def MAT_m_VEC(m, v):
     p = [ 0.0 for i in range(len(v)) ]
@@ -68,34 +68,41 @@ def parseModes(outcar, nat, vesta_front, vesta_end, scaling_factor):
     eigvals = [ 0.0 for i in range(nat*3) ]
     eigvecs = [ 0.0 for i in range(nat*3) ]
     norms   = [ 0.0 for i in range(nat*3) ]
-
+    
+    try:
+        mkdir('vesta_modes')
+    except FileExistsError:
+        pass
     outcar.seek(0) # just in case
     while True:
         line = outcar.readline()
         if not line:
             break
-        if "Eigenvectors after division by SQRT(mass)" in line:
+        if "Eigenvectors and eigenvalues of the dynamical matrix" in line:
+
             outcar.readline() # empty line
             outcar.readline() # Eigenvectors and eigenvalues of the dynamical matrix
-            outcar.readline() # ----------------------------------------------------
-            outcar.readline() # empty line
+            #outcar.readline() # ----------------------------------------------------
+            #outcar.readline() # empty line
             print("Mode    Freq (cm-1)")
             for i in range(nat*3):
-                outcar.readline() # empty line
-                p = re.search(r'^\s*(\d+).+?([\.\d]+) cm-1', outcar.readline())
-                eigvals[i] = float(p.group(2))
-
-                outcar.readline() # X         Y         Z           dx          dy          dz
-                eigvec = []
-
-                for j in range(nat):
-                    tmp = outcar.readline().split()
-                    eigvec.append([ float(tmp[x]) for x in range(3,6) ])
-                eigvecs[i] = eigvec
-                norms[i] = sqrt( sum( [abs(x)**2 for sublist in eigvec for x in sublist] ) )
-                writeVestaMode(i, eigvals[i], eigvecs[i], vesta_front, vesta_end, nat, scaling_factor)
-                print("%4d      %6.2f" %(i+1, eigvals[i]))
-
+                try:
+                    outcar.readline() # empty line
+                    p = re.search(r'^\s*(\d+).+?([\.\d]+) cm-1', outcar.readline())
+                    eigvals[i] = float(p.group(2))
+    
+                    outcar.readline() # X         Y         Z           dx          dy          dz
+                    eigvec = []
+    
+                    for j in range(nat):
+                        tmp = outcar.readline().split()
+                        eigvec.append([ float(tmp[x]) for x in range(3,6) ])
+                    eigvecs[i] = eigvec
+                    norms[i] = sqrt( sum( [abs(x)**2 for sublist in eigvec for x in sublist] ) )
+                    writeVestaMode(i, eigvals[i], eigvecs[i], vesta_front, vesta_end, nat, scaling_factor)
+                    print("%4d      %6.2f" %(i+1, eigvals[i]))
+                except AttributeError: # prevents error from a selective dynamics dfpt run
+                    break
         if "Eigenvectors after division by SQRT(mass)" in line:
             break
                 
@@ -103,7 +110,8 @@ def parseModes(outcar, nat, vesta_front, vesta_end, scaling_factor):
 
 
 def writeVestaMode(i, eigval, eigvec, vesta_front, vesta_end, nat, scaling_factor):
-    modef = open("mode_%.2f.vesta"%eigval, 'w')
+    
+    modef = open("vesta_modes/mode_%.2f.vesta"%eigval, 'w')
 
     modef.write(vesta_front)
 
@@ -170,7 +178,7 @@ def getVestaFrontEnd(vesta):
 
 if __name__ == '__main__':
 
-    scaling_factor = 40
+    scaling_factor = 6  # 6 is roughly correct
     
     vesta, outcar, poscar = openVestaOutcarPoscar()
     vesta_front, vesta_end = getVestaFrontEnd(vesta)
