@@ -1,7 +1,9 @@
 from pylab import *
 import sys
 import re
-from os import mkdir
+from os import chdir,getcwd,mkdir
+from os.path import exists
+
 
 def MAT_m_VEC(m, v):
     p = [ 0.0 for i in range(len(v)) ]
@@ -176,15 +178,21 @@ def getVestaFrontEnd(vesta):
 
     return vesta_front, vesta_end
 
-if __name__ == '__main__':
-
-    scaling_factor = 6  # 6 is roughly correct
-    
+def modes_to_vesta(filepath):
+    chdir(filepath)
     vesta, outcar, poscar = openVestaOutcarPoscar()
     vesta_front, vesta_end = getVestaFrontEnd(vesta)
     nat, vol, b, positions, poscar_header = parse_poscar(poscar)
 
     print("# atoms   vol of unit cell (Ang^3)   # modes")
     print("  %d      %4.2f       %d" %(nat,vol,nat*3))
-
+    
+    
     parseModes(outcar, nat, vesta_front, vesta_end, scaling_factor)
+    
+if __name__ == '__main__':
+
+    scaling_factor = 6  # 6 gives qualitatively clear vectors
+    filepath=getcwd()
+    if exists('./OUTCAR') and exists('./POSCAR.vesta') and exists('./POSCAR'):
+        main(filepath)
