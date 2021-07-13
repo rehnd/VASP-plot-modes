@@ -1,6 +1,8 @@
 from pylab import *
 import sys
 import re
+from os import chdir,getcwd,mkdir
+from os.path import exists
 
 
 def MAT_m_VEC(m, v):
@@ -68,34 +70,41 @@ def parseModes(outcar, nat, vesta_front, vesta_end, scaling_factor):
     eigvals = [ 0.0 for i in range(nat*3) ]
     eigvecs = [ 0.0 for i in range(nat*3) ]
     norms   = [ 0.0 for i in range(nat*3) ]
-
+    
+    try:
+        mkdir('vesta_modes')
+    except FileExistsError:
+        pass
     outcar.seek(0) # just in case
     while True:
         line = outcar.readline()
         if not line:
             break
-        if "Eigenvectors after division by SQRT(mass)" in line:
+        if "Eigenvectors and eigenvalues of the dynamical matrix" in line:
+
             outcar.readline() # empty line
             outcar.readline() # Eigenvectors and eigenvalues of the dynamical matrix
-            outcar.readline() # ----------------------------------------------------
-            outcar.readline() # empty line
+            #outcar.readline() # ----------------------------------------------------
+            #outcar.readline() # empty line
             print("Mode    Freq (cm-1)")
             for i in range(nat*3):
-                outcar.readline() # empty line
-                p = re.search(r'^\s*(\d+).+?([\.\d]+) cm-1', outcar.readline())
-                eigvals[i] = float(p.group(2))
-
-                outcar.readline() # X         Y         Z           dx          dy          dz
-                eigvec = []
-
-                for j in range(nat):
-                    tmp = outcar.readline().split()
-                    eigvec.append([ float(tmp[x]) for x in range(3,6) ])
-                eigvecs[i] = eigvec
-                norms[i] = sqrt( sum( [abs(x)**2 for sublist in eigvec for x in sublist] ) )
-                writeVestaMode(i, eigvals[i], eigvecs[i], vesta_front, vesta_end, nat, scaling_factor)
-                print("%4d      %6.2f" %(i+1, eigvals[i]))
-
+                try:
+                    outcar.readline() # empty line
+                    p = re.search(r'^\s*(\d+).+?([\.\d]+) cm-1', outcar.readline())
+                    eigvals[i] = float(p.group(2))
+    
+                    outcar.readline() # X         Y         Z           dx          dy          dz
+                    eigvec = []
+    
+                    for j in range(nat):
+                        tmp = outcar.readline().split()
+                        eigvec.append([ float(tmp[x]) for x in range(3,6) ])
+                    eigvecs[i] = eigvec
+                    norms[i] = sqrt( sum( [abs(x)**2 for sublist in eigvec for x in sublist] ) )
+                    writeVestaMode(i, eigvals[i], eigvecs[i], vesta_front, vesta_end, nat, scaling_factor)
+                    print("%4d      %6.2f" %(i+1, eigvals[i]))
+                except AttributeError: # prevents error from a selective dynamics dfpt run
+                    break
         if "Eigenvectors after division by SQRT(mass)" in line:
             break
                 
@@ -103,7 +112,8 @@ def parseModes(outcar, nat, vesta_front, vesta_end, scaling_factor):
 
 
 def writeVestaMode(i, eigval, eigvec, vesta_front, vesta_end, nat, scaling_factor):
-    modef = open("mode_%.2f.vesta"%eigval, 'w')
+    
+    modef = open("vesta_modes/mode_%.2f.vesta"%eigval, 'w')
 
     modef.write(vesta_front)
 
@@ -168,15 +178,21 @@ def getVestaFrontEnd(vesta):
 
     return vesta_front, vesta_end
 
-if __name__ == '__main__':
-
-    scaling_factor = 40
-    
+def modes_to_vesta(filepath):
+    chdir(filepath)
     vesta, outcar, poscar = openVestaOutcarPoscar()
     vesta_front, vesta_end = getVestaFrontEnd(vesta)
     nat, vol, b, positions, poscar_header = parse_poscar(poscar)
 
     print("# atoms   vol of unit cell (Ang^3)   # modes")
     print("  %d      %4.2f       %d" %(nat,vol,nat*3))
-
+    
+    
     parseModes(outcar, nat, vesta_front, vesta_end, scaling_factor)
+    
+if __name__ == '__main__':
+
+    scaling_factor = 6  # 6 gives qualitatively clear vectors
+    filepath=getcwd()
+    if exists('./OUTCAR') and exists('./POSCAR.vesta') and exists('./POSCAR'):
+        main(filepath)
